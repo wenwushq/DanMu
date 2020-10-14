@@ -2,7 +2,6 @@
 
 #include <QtWidgets/QWidget>
 #include "ui_DanMu.h"
-#include <QLabel>
 
 class DanMuControl;
 
@@ -21,7 +20,6 @@ private:
     Ui::DanMuClass ui;
 	QStringList m_strlstDanMus;
 	QStringList m_strColors;
-	QList<QLabel*> m_lstLabels;
 
 	DanMuControl *m_pDanMuCtrl;
 };
