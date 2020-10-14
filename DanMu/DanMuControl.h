@@ -6,6 +6,7 @@
 #include <QMap>
 #include <QPropertyAnimation>
 
+class QGraphicsOpacityEffect;
 class DanMuControl : public QObject
 {
 	Q_OBJECT
@@ -47,6 +48,7 @@ private:
 	int m_nDanMuSpace;//同一行两个弹幕间的间隙
 	QMap<QLabel*, QPropertyAnimation*> m_mapLabelOpacityAnim;
 	QMap<QLabel*, QPropertyAnimation*> m_mapLabelGeometryAnim;
+	QMap<QPropertyAnimation*, QGraphicsOpacityEffect*> m_mapOpacityAnimEffect;
 	int m_nDanMuIndex;//当前弹幕的索引
 	bool m_bStartSuccess;
 	QList<QPropertyAnimation*> m_lstpGeometryAnimationAfterGen;//在当前动画之后已经生成过动画的
