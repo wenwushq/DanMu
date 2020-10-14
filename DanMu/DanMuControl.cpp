@@ -100,6 +100,7 @@ void DanMuControl::GenAnimationByHeight(int nHeight)
 
 	m_mapLabelOpacityAnim[pLabel] = pOpacityAnimation;
 	m_mapLabelGeometryAnim[pLabel] = pGeometryAnimation;
+	m_mapOpacityAnimEffect[pOpacityAnimation] = pOpacityEffect;
 
 	connect(pGeometryAnimation, SIGNAL(valueChanged(const QVariant&)), this, SLOT(slotGeometryAnimationValueChanged(const QVariant&)));
 	connect(pOpacityAnimation, SIGNAL(finished()), this, SLOT(slotOpacityAnimationFinished()));
@@ -218,6 +219,8 @@ void DanMuControl::slotOpacityAnimationFinished()
 		m_lstpGeometryAnimationAfterGen.removeAll(m_mapLabelGeometryAnim[pLabelCur]);
 		delete m_mapLabelGeometryAnim[pLabelCur];
 		m_mapLabelGeometryAnim.remove(pLabelCur);
+		delete m_mapOpacityAnimEffect[m_mapLabelOpacityAnim[pLabelCur]];
+		m_mapOpacityAnimEffect.remove(m_mapLabelOpacityAnim[pLabelCur]);
 		delete m_mapLabelOpacityAnim[pLabelCur];
 		m_mapLabelOpacityAnim.remove(pLabelCur);
 	}
