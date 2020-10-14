@@ -37,9 +37,9 @@ void DanMuControl::SetRowNumber(int nNumber)
 }
 
 //设置弹幕标签
-void DanMuControl::SetLabels(QList<QLabel*> lstLabels)
+void DanMuControl::SetWidgets(QList<QWidget*> lstWidgets)
 {
-	m_lstLabels << lstLabels;
+	m_lstWidgets << lstWidgets;
 
 }
 
@@ -55,7 +55,7 @@ void DanMuControl::CalcPerRowYPos()
 //生成动画
 void DanMuControl::GenAnimationByIndex(int nIndex)
 {
-	if (nIndex >= m_lstLabels.count())
+	if (nIndex >= m_lstWidgets.count())
 		return;
 
 	int nRowIndex = nIndex % m_lstnRowYPos.count();//计算出应该在哪一行
@@ -66,21 +66,20 @@ void DanMuControl::GenAnimationByIndex(int nIndex)
 //生成动画
 void DanMuControl::GenAnimationByHeight(int nHeight)
 {
-	if (m_nDanMuIndex >= m_lstLabels.count())
+	if (m_nDanMuIndex >= m_lstWidgets.count())
 		return;
 
-	QLabel* pLabel = m_lstLabels[m_nDanMuIndex];
-	pLabel->setScaledContents(true);
-	pLabel->setVisible(true);
+	QWidget* pWidget = m_lstWidgets[m_nDanMuIndex];
+	pWidget->setVisible(true);
 	
-	QRect rcLabel = pLabel->geometry();
+	QRect rcWidget = pWidget->geometry();
 
 	//设置标签移动到窗口的最右边
-	pLabel->setGeometry(m_nShowAreaLeft + m_sizeShowArea.width(), nHeight - rcLabel.height() / 2, rcLabel.width(), rcLabel.height());
+	pWidget->setGeometry(m_nShowAreaLeft + m_sizeShowArea.width(), nHeight - rcWidget.height() / 2, rcWidget.width(), rcWidget.height());
 
 	//透明动画
-	QGraphicsOpacityEffect* pOpacityEffect = new QGraphicsOpacityEffect(pLabel);
-	pLabel->setGraphicsEffect(pOpacityEffect);
+	QGraphicsOpacityEffect* pOpacityEffect = new QGraphicsOpacityEffect(pWidget);
+	pWidget->setGraphicsEffect(pOpacityEffect);
 	pOpacityEffect->setOpacity(0);
 
 	//由于透明动画更改属性的方式只能顶层窗口起作用，所以加了上面的代码
@@ -90,16 +89,16 @@ void DanMuControl::GenAnimationByHeight(int nHeight)
 	pOpacityAnimation->setEndValue(1);
 
 	//从右向左移动动画
-	QPropertyAnimation* pGeometryAnimation = new QPropertyAnimation(pLabel, "geometry");
+	QPropertyAnimation* pGeometryAnimation = new QPropertyAnimation(pWidget, "geometry");
 	pGeometryAnimation->setDuration(m_sizeShowArea.width() / 300.0 * 6000);//根据显示区域宽度计算出移动时间
-	pGeometryAnimation->setStartValue(pLabel->geometry());
-	QRect rcLabelEnd = pLabel->geometry();
-	//pGeometryAnimation->setEndValue(QRect(m_nShowAreaLeft - rcLabelEnd.width(), rcLabelEnd.top(), rcLabelEnd.width(), rcLabelEnd.height()));
-	pGeometryAnimation->setEndValue(QRect(m_nShowAreaLeft - 500, rcLabelEnd.top(), rcLabelEnd.width(), rcLabelEnd.height()));//500是让label左侧一致，不然运动不一致，有快有慢
+	pGeometryAnimation->setStartValue(pWidget->geometry());
+	QRect rcWidgetEnd = pWidget->geometry();
+	//pGeometryAnimation->setEndValue(QRect(m_nShowAreaLeft - rcWidgetEnd.width(), rcWidgetEnd.top(), rcWidgetEnd.width(), rcWidgetEnd.height()));
+	pGeometryAnimation->setEndValue(QRect(m_nShowAreaLeft - 500, rcWidgetEnd.top(), rcWidgetEnd.width(), rcWidgetEnd.height()));//500是让Widget左侧一致，不然运动不一致，有快有慢
 	pGeometryAnimation->setEasingCurve(QEasingCurve::Linear);
 
-	m_mapLabelOpacityAnim[pLabel] = pOpacityAnimation;
-	m_mapLabelGeometryAnim[pLabel] = pGeometryAnimation;
+	m_mapWidgetOpacityAnim[pWidget] = pOpacityAnimation;
+	m_mapWidgetGeometryAnim[pWidget] = pGeometryAnimation;
 	m_mapOpacityAnimEffect[pOpacityAnimation] = pOpacityEffect;
 
 	connect(pGeometryAnimation, SIGNAL(valueChanged(const QVariant&)), this, SLOT(slotGeometryAnimationValueChanged(const QVariant&)));
@@ -108,14 +107,14 @@ void DanMuControl::GenAnimationByHeight(int nHeight)
 	pGeometryAnimation->start();
 	pOpacityAnimation->start();
 	m_nDanMuIndex++;
-	if (m_nDanMuIndex >= m_lstLabels.count())
+	if (m_nDanMuIndex >= m_lstWidgets.count())
 		m_nDanMuIndex = 0;
 }
 
 //开始弹幕
 void DanMuControl::Start()
 {
-	if (m_lstLabels.isEmpty())
+	if (m_lstWidgets.isEmpty())
 		return;
 
 	m_nDanMuIndex = 0;
@@ -146,14 +145,14 @@ void DanMuControl::slotGeometryAnimationValueChanged(const QVariant &varValue)
 	if (!pGeometryAnimation)
 		return;
 	
-	QLabel *pLabelCur = nullptr;
-	QMapIterator<QLabel*, QPropertyAnimation*> iter(m_mapLabelGeometryAnim);
+	QWidget *pWidgetCur = nullptr;
+	QMapIterator<QWidget*, QPropertyAnimation*> iter(m_mapWidgetGeometryAnim);
 	while (iter.hasNext()) {
 		iter.next();
 		if (iter.value() == pGeometryAnimation)
 		{
-			int nIndex = m_lstLabels.indexOf(iter.key());
-			pLabelCur = m_lstLabels[nIndex];
+			int nIndex = m_lstWidgets.indexOf(iter.key());
+			pWidgetCur = m_lstWidgets[nIndex];
 			break;
 		}
 	}
@@ -161,26 +160,26 @@ void DanMuControl::slotGeometryAnimationValueChanged(const QVariant &varValue)
 	QRect rcValue = varValue.toRect();
 	if (pGeometryAnimation->startValue().toRect().left() - rcValue.right() >= m_nDanMuSpace)
 	{
-		if (!m_lstpGeometryAnimationAfterGen.contains(pGeometryAnimation) && !m_mapLabelGeometryAnim.contains(m_lstLabels[m_nDanMuIndex]))
+		if (!m_lstpGeometryAnimationAfterGen.contains(pGeometryAnimation) && !m_mapWidgetGeometryAnim.contains(m_lstWidgets[m_nDanMuIndex]))
 		{//显示下一条弹幕
-			GenAnimationByHeight(GetLabelInRowHeight(pLabelCur));
+			GenAnimationByHeight(GetWidgetInRowHeight(pWidgetCur));
 			m_lstpGeometryAnimationAfterGen << pGeometryAnimation;
 		}
 		else if (rcValue.left() <= m_nShowAreaLeft + 100)
 		{//到左边，渐隐
-			if (m_mapLabelOpacityAnim[pLabelCur]->state() != QAbstractAnimation::Running)
+			if (m_mapWidgetOpacityAnim[pWidgetCur]->state() != QAbstractAnimation::Running)
 			{
-				m_mapLabelOpacityAnim[pLabelCur]->setDirection(QAbstractAnimation::Backward);
-				m_mapLabelOpacityAnim[pLabelCur]->start();
+				m_mapWidgetOpacityAnim[pWidgetCur]->setDirection(QAbstractAnimation::Backward);
+				m_mapWidgetOpacityAnim[pWidgetCur]->start();
 			}
 		}
 	}
 }
 
-//根据label的高度得到所在的哪一行
-int DanMuControl::GetLabelInRowHeight(QLabel* pLabel)
+//根据widget的高度得到所在的哪一行
+int DanMuControl::GetWidgetInRowHeight(QWidget* pWidget)
 {
-	QRect rcValue = pLabel->geometry();
+	QRect rcValue = pWidget->geometry();
 	int nHeight = rcValue.top() + rcValue.height() / 2;
 	for each (int nYPos in m_lstnRowYPos)
 	{
@@ -200,28 +199,28 @@ void DanMuControl::slotOpacityAnimationFinished()
 	if (!pOpacityAnimation)
 		return;
 
-	QLabel *pLabelCur = nullptr;
-	QMapIterator<QLabel*, QPropertyAnimation*> iter(m_mapLabelOpacityAnim);
+	QWidget *pWidgetCur = nullptr;
+	QMapIterator<QWidget*, QPropertyAnimation*> iter(m_mapWidgetOpacityAnim);
 	while (iter.hasNext()) {
-		iter.next();
+		iter.next(); 
 		if (iter.value() == pOpacityAnimation)
 		{
-			int nIndex = m_lstLabels.indexOf(iter.key());
-			pLabelCur = m_lstLabels[nIndex];
+			int nIndex = m_lstWidgets.indexOf(iter.key());
+			pWidgetCur = m_lstWidgets[nIndex];
 			break;
 		}
 	}
 
 	if (pOpacityAnimation->direction() == QAbstractAnimation::Backward)
 	{
-		pLabelCur->setVisible(false);
+		pWidgetCur->setVisible(false);
 
-		m_lstpGeometryAnimationAfterGen.removeAll(m_mapLabelGeometryAnim[pLabelCur]);
-		delete m_mapLabelGeometryAnim[pLabelCur];
-		m_mapLabelGeometryAnim.remove(pLabelCur);
-		delete m_mapOpacityAnimEffect[m_mapLabelOpacityAnim[pLabelCur]];
-		m_mapOpacityAnimEffect.remove(m_mapLabelOpacityAnim[pLabelCur]);
-		delete m_mapLabelOpacityAnim[pLabelCur];
-		m_mapLabelOpacityAnim.remove(pLabelCur);
+		m_lstpGeometryAnimationAfterGen.removeAll(m_mapWidgetGeometryAnim[pWidgetCur]);
+		delete m_mapWidgetGeometryAnim[pWidgetCur];
+		m_mapWidgetGeometryAnim.remove(pWidgetCur);
+		delete m_mapOpacityAnimEffect[m_mapWidgetOpacityAnim[pWidgetCur]];
+		m_mapOpacityAnimEffect.remove(m_mapWidgetOpacityAnim[pWidgetCur]);
+		delete m_mapWidgetOpacityAnim[pWidgetCur];
+		m_mapWidgetOpacityAnim.remove(pWidgetCur);
 	}
 }
